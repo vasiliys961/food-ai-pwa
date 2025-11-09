@@ -1,64 +1,110 @@
-let imageBase64 = null;
+// api/analyze-food.js — CommonJS версия (рабочая для Vercel)
+const axios = require('axios');
 
-document.getElementById('fileInput').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    imageBase64 = reader.result;
-    document.getElementById('preview').innerHTML = `<img src="${imageBase64}" alt="Фото блюда" />`;
-    document.getElementById('analyzeBtn').disabled = false;
-    document.getElementById('analyzeBtn').textContent = 'Анализировать';
-  };
-  reader.readAsDataURL(file);
-});
+const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const MODEL = 'claude-3-5-sonnet-20241022';
 
-async function analyzeFood(image, userParams) {
-  const res = await fetch('/api/analyze-food', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imageBase64: image, userParams })
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err || 'Ошибка сервера');
+async function searchOpenFoodFacts(query) {
+  try {
+    const encodedQuery = encodeURIComponent(query);
+    const response = await axios.get(
+      `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodedQuery}&json=1&page_size=1`
+    );
+    const products = response.data.products;
+    if (products && products.length > 0) {
+      const p = products[0];
+      return {
+        dish: p.product_name || query,
+        calories: p.nutriments?.energy_kcal ?? null,
+        nutrients: {
+          белки: Math.round(p.nutriments?.proteins ?? 0),
+          жиры: Math.round(p.nutriments?.fat ?? 0),
+          углеводы: Math.round(p.nutriments?.carbohydrates ?? 0)
+        }
+      };
+    }
+  } catch (e) {
+    console.warn('OpenFoodFacts error:', e.message);
   }
-  return res.json();
+  return null;
 }
 
-document.getElementById('analyzeBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('analyzeBtn');
-  btn.disabled = true;
-  btn.textContent = 'Анализ...';
-
-  const userParams = {
-    weight: +document.getElementById('weight').value,
-    height: +document.getElementById('height').value,
-    sex: document.getElementById('sex').value,
-    goal: document.getElementById('goal').value,
-    activity: document.getElementById('activity').value
-  };
-
-  try {
-    const result = await analyzeFood(imageBase64, userParams);
-    
-    // Сохраняем в историю
-    const dayLog = JSON.parse(localStorage.getItem('dayLog') || '[]');
-    dayLog.push({ ...result, timestamp: new Date().toISOString() });
-    localStorage.setItem('dayLog', JSON.stringify(dayLog));
-
-    document.getElementById('result').innerHTML = `
-      <h2>Результат анализа</h2>
-      <pre>${JSON.stringify(result, null, 2)}</pre>
-      <p>ℹ️ Данные сохранены в историю. Точность — ориентировочная.</p>
-    `;
-  } catch (e) {
-    document.getElementById('result').innerHTML = `
-      <h2>Ошибка</h2>
-      <pre>${e.message}</pre>
-    `;
+module.exports = async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Метод не разрешён' });
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Анализировать снова';
-});
+  const { imageBase64, userParams } = req.body;
+  const base64Data = imageBase64.split(',')[1] || imageBase64;
+
+  const prompt = `
+Проанализируй это фото еды. В кадре банковская карта (85.6×53.98 мм).
+Определи: название, вес в граммах, ингредиенты.
+Верни ТОЛЬКО JSON: {"dish":"...","weight_g":число,"ingredients":["..."]}.
+  `.trim();
+
+  try {
+    const claudeRes = await axios.post(
+      CLAUDE_API_URL,
+      {
+        model: MODEL,
+        max_tokens: 800,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Data } }
+            ]
+          }
+        ]
+      },
+      {
+        headers: {
+          'x-api-key': process.env.CLAUDE_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json'
+        },
+        timeout: 9000 // < 10 сек для Hobby
+      }
+    );
+
+    let text = claudeRes.data.content[0]?.text || '{}';
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      const match = text.match(/\{[\s\S]*\}/);
+      data = match ? JSON.parse(match[0]) : null;
+    }
+
+    if (!data || !data.dish) throw new Error('Не распознано');
+
+    const weight = data.weight_g || 200;
+    const ofData = await searchOpenFoodFacts(data.dish);
+
+    let calories = Math.round((150 / 100) * weight);
+    let nutrients = { белки: 0, жиры: 0, углеводы: 0 };
+
+    if (ofData?.calories) {
+      calories = Math.round((ofData.calories / 100) * weight);
+      nutrients = {
+        белки: Math.round((ofData.nutrients.белки / 100) * weight),
+        жиры: Math.round((ofData.nutrients.жиры / 100) * weight),
+        углеводы: Math.round((ofData.nutrients.углеводы / 100) * weight)
+      };
+    }
+
+    res.status(200).json({
+      dish: data.dish,
+      weight_g: weight,
+      calories,
+      nutrients,
+      ingredients: data.ingredients || [],
+      source: ofData ? 'OpenFoodFacts' : 'AI'
+    });
+  } catch (error) {
+    console.error('API Error:', error.message);
+    res.status(500).json({ error: 'Не удалось проанализировать фото' });
+  }
+};

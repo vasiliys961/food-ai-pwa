@@ -1,4 +1,4 @@
-cat > vite.config.js << 'EOF'
+// vite.config.js
 export default {
   root: '.',
   build: {
@@ -12,4 +12,3 @@ export default {
     open: true
   }
 }
-EOF

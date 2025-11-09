@@ -1,8 +1,8 @@
-// api/analyze-food.js — CommonJS версия (рабочая для Vercel)
+// api/analyze-food.js — CommonJS версия для Vercel + бесплатный Claude
 const axios = require('axios');
 
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-3-5-sonnet-20241022';
+const MODEL = 'claude-3-sonnet-20240229'; // ✅ Работает на бесплатном плане
 
 async function searchOpenFoodFacts(query) {
   try {
@@ -39,8 +39,9 @@ module.exports = async function handler(req, res) {
 
   const prompt = `
 Проанализируй это фото еды. В кадре банковская карта (85.6×53.98 мм).
-Определи: название, вес в граммах, ингредиенты.
+Определи: название блюда, вес в граммах, основные ингредиенты.
 Верни ТОЛЬКО JSON: {"dish":"...","weight_g":число,"ingredients":["..."]}.
+Никаких пояснений.
   `.trim();
 
   try {
@@ -48,7 +49,7 @@ module.exports = async function handler(req, res) {
       CLAUDE_API_URL,
       {
         model: MODEL,
-        max_tokens: 800,
+        max_tokens: 600, // уменьшили для бесплатного плана
         messages: [
           {
             role: 'user',
@@ -65,7 +66,7 @@ module.exports = async function handler(req, res) {
           'anthropic-version': '2023-06-01',
           'content-type': 'application/json'
         },
-        timeout: 9000 // < 10 сек для Hobby
+        timeout: 10000 // 10 сек — максимум для Hobby
       }
     );
 
@@ -105,6 +106,6 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('API Error:', error.message);
-    res.status(500).json({ error: 'Не удалось проанализировать фото' });
+    res.status(500).json({ error: 'Не удалось проанализировать фото. Попробуйте другое изображение.' });
   }
 };

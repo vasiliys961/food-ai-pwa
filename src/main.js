@@ -2,9 +2,15 @@ let imageBase64 = null;
 let resultDiv = document.getElementById('result');
 let logDiv = document.getElementById('log');
 
-document.getElementById('fileInput').addEventListener('change', function (e) {
-  const file = e.target.files[0];
-  if (!file) return;
+document.getElementById('analyzeBtn').onclick = async function () {
+  if (!imageBase64) {
+    resultDiv.textContent = 'Фото не выбрано!';
+    return;
+  }
+  resultDiv.textContent = 'Анализ...';
+
+  // ВСТАВЬТЕ ЭТУ СТРОКУ прямо здесь!
+  console.log(typeof imageBase64, imageBase64.length, imageBase64.slice(0,100));
 
   const reader = new FileReader();
   reader.onloadend = () => {

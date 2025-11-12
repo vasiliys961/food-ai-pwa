@@ -2,7 +2,6 @@ let imageBase64 = null;
 let resultDiv = document.getElementById('result');
 let logDiv = document.getElementById('log');
 
-// Обработчик загрузки файла: только картинка
 document.getElementById('fileInput').addEventListener('change', function (e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -10,24 +9,21 @@ document.getElementById('fileInput').addEventListener('change', function (e) {
   const reader = new FileReader();
   reader.onloadend = () => {
     document.getElementById('preview').src = reader.result;
-
-    // убираем префикс типа для AI/Server
     const base64 = reader.result;
     const pureBase64 = base64.replace(/^data:image\/\w+;base64,/, '');
     imageBase64 = pureBase64;
-    // опционально — покажем в консоли:
-    console.log(typeof imageBase64, imageBase64.length, imageBase64.slice(0,100));
   };
   reader.readAsDataURL(file);
 });
 
-// Обработчик кнопки "Анализ"
 document.getElementById('analyzeBtn').onclick = async function () {
   if (!imageBase64) {
     resultDiv.textContent = 'Фото не выбрано!';
     return;
   }
+
   resultDiv.textContent = 'Анализ...';
+  logDiv.textContent = '';
 
   const userParams = {
     weight: document.getElementById('weight').value,
@@ -36,25 +32,54 @@ document.getElementById('analyzeBtn').onclick = async function () {
     goal: document.getElementById('goal').value,
     activity: document.getElementById('activity').value
   };
+
   const reference = document.getElementById('reference').value;
+
   try {
-    const res = await fetch('/api/analyze-food', {
+    const apiUrl = window.location.origin + '/api/analyze-food';
+    
+    const res = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageBase64, userParams, reference })
     });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      resultDiv.textContent = `❌ Ошибка ${res.status}: ${errorData.error || 'Неизвестная ошибка'}`;
+      if (errorData.debug) {
+        logDiv.textContent = 'Подробно:\n' + errorData.debug;
+      }
+      return;
+    }
+
     const data = await res.json();
+
     if (data.error) {
-      resultDiv.textContent = data.error;
+      resultDiv.textContent = '❌ ' + data.error;
       logDiv.textContent = data.debug || '';
     } else {
-      resultDiv.textContent = "Результат:\n" + JSON.stringify(data, null, 2);
+      resultDiv.innerHTML = `
+        <strong>✅ Результат:</strong>
+        <div style="margin-top: 10px;">
+          <p><strong>Блюдо:</strong> ${data.dish}</p>
+          <p><strong>Вес:</strong> ${data.weight_g}г</p>
+          <p><strong>Ингредиенты:</strong> ${data.ingredients.join(', ')}</p>
+          <p><strong>Калории:</strong> ${data.calories} ккал</p>
+        </div>
+      `;
+      
       let dayLog = JSON.parse(localStorage.getItem('dayLog') || '[]');
-      dayLog.push(data);
+      dayLog.push({
+        ...data,
+        timestamp: new Date().toISOString()
+      });
       localStorage.setItem('dayLog', JSON.stringify(dayLog));
     }
   } catch (e) {
-    resultDiv.textContent = 'Ошибка сети: ' + e.message;
+    resultDiv.textContent = '❌ Ошибка сети: ' + e.message;
+    console.error('Fetch error:', e);
   }
-}
+};
+
 

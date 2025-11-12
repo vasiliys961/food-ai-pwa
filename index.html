@@ -2,36 +2,205 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Калории по фото</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Калории по фото — AI</title>
   <link rel="manifest" href="/manifest.json">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 28px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+    }
+    
+    input[type="file"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    
+    input[type="file"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin: 20px 0;
+      border: 2px solid #eee;
+      display: block;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .grid-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .grid-item input,
+    .grid-item select {
+      width: 100%;
+    }
+    
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    #result {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+      min-height: 50px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    #result p {
+      margin: 8px 0;
+    }
+    
+    #log {
+      color: #d32f2f;
+      font-size: 12px;
+      margin-top: 10px;
+      padding: 10px;
+      background: #ffebee;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Калории по фото — AI</h1>
-  <input type="file" id="fileInput" accept="image/*" capture="environment"><br>
-  <img id="preview" width="250"><br>
-  <select id="reference">
-    <option value="карта">Банковская карта</option>
-    <option value="ложка">Ложка</option>
-    <option value="стакан">Стакан</option>
-  </select>
-  <br>
-  <div>
-    <label>Вес (кг)<input id="weight" value="75"></label>
-    <label>Рост (см)<input id="height" value="175"></label>
-    <label>Пол
-      <select id="sex"><option value="муж">Муж</option><option value="жен">Жен</option></select>
-    </label>
-    <label>Цель
-      <select id="goal"><option value="снижение">Снижение</option><option value="поддержание">Поддержание</option><option value="набор">Набор массы</option></select>
-    </label>
-    <label>Активность
-      <select id="activity"><option value="активный">Активный</option><option value="малоподвижный">Малоподвижный</option></select>
-    </label>
+  <div class="container">
+    <h1>🍽️ Калории по фото — AI</h1>
+    
+    <div class="form-group">
+      <label for="fileInput">📷 Выберите фото блюда:</label>
+      <input type="file" id="fileInput" accept="image/*" capture="environment">
+    </div>
+    
+    <img id="preview" alt="Предпросмотр">
+    
+    <div class="form-group">
+      <label for="reference">📏 Референс (размер для масштаба):</label>
+      <select id="reference">
+        <option value="карта">💳 Банковская карта</option>
+        <option value="ложка">🥄 Ложка</option>
+        <option value="стакан">🥤 Стакан</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label>👤 Ваши параметры:</label>
+      <div class="grid">
+        <div class="grid-item">
+          <label for="weight">Вес (кг):</label>
+          <input type="number" id="weight" value="75" min="30" max="200">
+        </div>
+        <div class="grid-item">
+          <label for="height">Рост (см):</label>
+          <input type="number" id="height" value="175" min="130" max="230">
+        </div>
+      </div>
+      
+      <div class="grid">
+        <div class="grid-item">
+          <label for="sex">Пол:</label>
+          <select id="sex">
+            <option value="муж">Мужской</option>
+            <option value="жен">Женский</option>
+          </select>
+        </div>
+        <div class="grid-item">
+          <label for="goal">Цель:</label>
+          <select id="goal">
+            <option value="снижение">Снижение веса</option>
+            <option value="поддержание">Поддержание</option>
+            <option value="набор">Набор массы</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="grid">
+        <div class="grid-item">
+          <label for="activity">Активность:</label>
+          <select id="activity">
+            <option value="активный">Активный</option>
+            <option value="малоподвижный">Малоподвижный</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <button id="analyzeBtn">🔍 Анализировать</button>
+    
+    <div id="result"></div>
+    <div id="log"></div>
   </div>
-  <button id="analyzeBtn">Анализировать</button>
-  <pre id="result"></pre>
-  <pre id="log" style="color:gray"></pre>
-  <script type="module" src="/src/main.js"></script>
-</body>
-</html>
+  
+  <script type="module" src

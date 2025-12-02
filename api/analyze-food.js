@@ -51,15 +51,14 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY не задан в Vercel Environment!'});
       const base64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions'
       method: 'POST',
       headers: {
-        'x-api-key': claudeKey,
-        'anthropic-version': '2023-06-01'
+'Authorization': `Bearer ${claudeKey}`,
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022'
+        model: 'anthropic/claude-3-5-sonnet'
         max_tokens: 1200,
         messages: [
           {

@@ -142,8 +142,17 @@ function updateDailyStats() {
     advice += `<p><strong>💡 Совет:</strong> Для набора массы нужно больше калорий. Добавьте в рацион орехи, авокадо, цельнозерновые продукты.</p>`;
   }
 
-  document.getElementById('dailyAdvice').innerHTML = advice;
-  document.getElementById('dailyStats').style.display = 'block';
+  // Обновляем элементы, проверяя их существование
+  const dailyAdviceEl = document.getElementById('dailyAdvice');
+  const dailyStatsEl = document.getElementById('dailyStats');
+  
+  if (dailyAdviceEl) {
+    dailyAdviceEl.innerHTML = advice;
+  }
+  
+  if (dailyStatsEl) {
+    dailyStatsEl.style.display = 'block';
+  }
 }
 
 async function analyzeFood(image, userParams, reference) {

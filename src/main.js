@@ -1,5 +1,4 @@
 let imageBase64 = null;
-let fileLoaded = false;
 let resultDiv = document.getElementById('result');
 let logDiv = document.getElementById('log');
 
@@ -13,14 +12,12 @@ document.getElementById('fileInput').addEventListener('change', function (e) {
     const base64 = reader.result;
     const pureBase64 = base64.replace(/^data:image\/\w+;base64,/, '');
     imageBase64 = pureBase64;
-        fileLoaded = true;
   };
   reader.readAsDataURL(file);
 });
 
 document.getElementById('analyzeBtn').onclick = async function () {
-  if (!fileLoaded || !imageBase64) {
-    resultDiv.textContent = 'Фото не выбрано!';
+  if (!imageBase64) {    resultDiv.textContent = 'Фото не выбрано!';
     return;
   }
 

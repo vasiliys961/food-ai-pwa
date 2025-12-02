@@ -59,7 +59,8 @@ export default async function handler(req, res) {
     if (!claudeKey) {
       return res.status(500).json({ error: 'OPENROUTER_API_KEY не задан в Vercel Environment!'});
        }
-      const base64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+      // Handle both full data URL and pure base64
+  const base64 = imageBase64.startsWith('data:') ? imageBase64.replace(/^data:image\/\w+;base64,/, '') : imageBase64;
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',

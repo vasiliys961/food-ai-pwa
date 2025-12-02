@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY не задан в Vercel Environment!'});
       const base64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions'
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
 'Authorization': `Bearer ${claudeKey}`,

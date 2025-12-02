@@ -30,22 +30,31 @@ async function searchOpenFoodFacts(query) {
 }
 
 export default async function handler(req, res) {
+  console.log('=== Handler started ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  
   // Устанавливаем таймаут для ответа
   const timeout = setTimeout(() => {
     if (!res.headersSent) {
+      console.error('Request timeout');
       res.status(504).json({ error: 'Таймаут запроса' });
     }
   }, 28000); // 28 секунд (меньше чем 30 сек лимит Vercel)
 
   try {
+    console.log('Inside try block');
+    
     // Убеждаемся что это POST запрос
     if (req.method !== 'POST') {
       clearTimeout(timeout);
+      console.log('Method not allowed:', req.method);
       return res.status(405).json({ error: 'Метод не разрешён' });
     }
 
     console.log('Request received, method:', req.method);
     console.log('Body type:', typeof req.body);
+    console.log('Body keys:', req.body ? Object.keys(req.body) : 'no body');
 
     // Парсим body если это строка
     let body = req.body;
@@ -297,20 +306,28 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     clearTimeout(timeout);
-    console.error('API Error:', error.message);
+    console.error('=== ERROR CAUGHT ===');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     if (error.response) {
       console.error('Error response status:', error.response.status);
-      console.error('Error response data:', error.response.data);
+      console.error('Error response data:', JSON.stringify(error.response.data, null, 2));
+    }
+    if (error.cause) {
+      console.error('Error cause:', error.cause);
     }
     
     // Убеждаемся что ответ еще не отправлен
     if (!res.headersSent) {
       const errorMessage = error.message || 'Неизвестная ошибка';
+      console.error('Sending error response:', errorMessage);
       res.status(500).json({ 
         error: 'Не удалось проанализировать фото. Попробуйте другое изображение.',
         details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       });
+    } else {
+      console.error('Response already sent, cannot send error');
     }
   }
 }

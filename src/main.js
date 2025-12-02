@@ -66,15 +66,29 @@ function updateDailyStats() {
   const goal = document.getElementById('goal').value;
   const activity = document.getElementById('activity').value;
 
-  if (!weight || !height) return;
+  if (!weight || !height) {
+    // Скрываем блок если нет параметров
+    document.getElementById('dailyStats').style.display = 'none';
+    return;
+  }
 
   const dailyLimit = calculateDailyCalories(weight, height, sex, goal, activity);
   const todayCalories = getTodayCalories();
   const percent = Math.min(100, Math.round((todayCalories / dailyLimit) * 100));
+  
+  // Определяем цель для отображения
+  const goalText = goal === 'снижение' ? 'Снижение веса' : goal === 'набор' ? 'Набор массы' : 'Поддержание веса';
 
   document.getElementById('dailyLimit').textContent = dailyLimit;
-  document.getElementById('dailyCalories').textContent = `Калории: ${todayCalories} / ${dailyLimit} ккал`;
-  document.getElementById('caloriesProgress').style.width = `${percent}%`;
+  document.getElementById('dailyCalories').innerHTML = `
+    <strong>Калории:</strong> ${todayCalories} / ${dailyLimit} ккал 
+    <span style="color: ${percent > 100 ? '#f44336' : percent > 80 ? '#ff9800' : '#4caf50'}; font-weight: bold;">
+      (${percent}%)
+    </span>
+    <br><small style="color: #666;">Цель: ${goalText} | ${sex === 'муж' ? 'Мужчина' : 'Женщина'}, ${weight} кг, ${height} см, ${activity === 'активный' ? 'Активный' : 'Малоподвижный'}</small>
+  `;
+  document.getElementById('caloriesProgress').style.width = `${Math.min(100, percent)}%`;
+  document.getElementById('caloriesProgress').style.backgroundColor = percent > 100 ? '#f44336' : percent > 80 ? '#ff9800' : '#4caf50';
   document.getElementById('caloriesProgress').textContent = `${percent}%`;
 
   // Советы по питанию

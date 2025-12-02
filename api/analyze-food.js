@@ -46,9 +46,9 @@ export default async function handler(req, res) {
 ВАЖНО: Ответ ДОЛЖЕН быть ТОЛЬКО JSON, никакого другого текста!`;
 
 
-    const claudeKey = process.env.CLAUDE_API_KEY;
+    const claudeKey = process.env.OPENROUTER_API_KEY;
     if (!claudeKey) {
-      return res.status(500).json({ error: 'CLAUDE_API_KEY не задан в Vercel Environment!' });
+      return res.status(500).json({ error: 'OPENROUTER_API_KEY не задан в Vercel Environment!' });
     }
 
     const base64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
         'content-type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
+        model: 'anthropic/claude-3-5-sonnet',
         max_tokens: 1200,
         messages: [
           {

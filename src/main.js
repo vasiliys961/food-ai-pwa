@@ -58,6 +58,106 @@ function getTodayCalories() {
     .reduce((sum, item) => sum + (item.calories || 0), 0);
 }
 
+// Получить калории за вчера
+function getYesterdayCalories() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toDateString();
+  const dayLog = JSON.parse(localStorage.getItem('dayLog') || '[]');
+  return dayLog
+    .filter(item => new Date(item.timestamp).toDateString() === yesterdayStr)
+    .reduce((sum, item) => sum + (item.calories || 0), 0);
+}
+
+// Получить данные за вчера
+function getYesterdayData() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toDateString();
+  const dayLog = JSON.parse(localStorage.getItem('dayLog') || '[]');
+  return dayLog.filter(item => new Date(item.timestamp).toDateString() === yesterdayStr);
+}
+
+// Показать утренний отчет
+function showMorningReport() {
+  const now = new Date();
+  const hour = now.getHours();
+  
+  // Показываем отчет только утром (6-12 часов)
+  if (hour < 6 || hour >= 12) {
+    return;
+  }
+  
+  const weight = +document.getElementById('weight').value;
+  const height = +document.getElementById('height').value;
+  const sex = document.getElementById('sex').value;
+  const goal = document.getElementById('goal').value;
+  const activity = document.getElementById('activity').value;
+  
+  if (!weight || !height) {
+    return; // Нет параметров, не показываем отчет
+  }
+  
+  const yesterdayData = getYesterdayData();
+  if (yesterdayData.length === 0) {
+    return; // Нет данных за вчера
+  }
+  
+  const yesterdayCalories = getYesterdayCalories();
+  const dailyLimit = calculateDailyCalories(weight, height, sex, goal, activity);
+  const percent = Math.round((yesterdayCalories / dailyLimit) * 100);
+  const violation = yesterdayCalories > dailyLimit;
+  const deficit = dailyLimit - yesterdayCalories;
+  
+  let reportHTML = `
+    <div class="morning-report" style="background: ${violation ? '#ffebee' : '#e8f5e9'}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${violation ? '#f44336' : '#4caf50'};">
+      <h3 style="margin-top: 0; color: ${violation ? '#c62828' : '#2e7d32'};">
+        ${violation ? '⚠️' : '✅'} Отчет за вчера
+      </h3>
+      <p><strong>Съедено:</strong> ${yesterdayCalories} ккал из ${dailyLimit} ккал (${percent}%)</p>
+      <p><strong>Приемов пищи:</strong> ${yesterdayData.length}</p>
+      <ul style="margin: 8px 0; padding-left: 20px;">
+        ${yesterdayData.map(item => `<li>${item.dish} — ${item.calories} ккал</li>`).join('')}
+      </ul>
+  `;
+  
+  if (violation) {
+    reportHTML += `
+      <div style="background: #fff3e0; padding: 12px; border-radius: 6px; margin-top: 12px;">
+        <h4 style="margin-top: 0; color: #e65100;">⚠️ Превышение нормы</h4>
+        <p>Вы превысили дневную норму на <strong>${Math.abs(deficit)} ккал</strong>.</p>
+        <p><strong>Рекомендации на сегодня:</strong></p>
+        <ul style="margin: 8px 0; padding-left: 20px;">
+          <li>Увеличьте физическую активность</li>
+          <li>Сделайте сегодняшний рацион более легким</li>
+          <li>Больше овощей и белка, меньше углеводов</li>
+          <li>Пейте больше воды</li>
+        </ul>
+      </div>
+    `;
+  } else if (deficit > 0) {
+    reportHTML += `
+      <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; margin-top: 12px;">
+        <h4 style="margin-top: 0; color: #2e7d32;">✅ В пределах нормы</h4>
+        <p>Отлично! Вы были в пределах нормы. Осталось <strong>${deficit} ккал</strong> до лимита.</p>
+        ${goal === 'снижение' ? '<p><strong>💡 Совет:</strong> Для снижения веса важно поддерживать дефицит калорий. Продолжайте в том же духе!</p>' : ''}
+      </div>
+    `;
+  }
+  
+  reportHTML += `
+      <button onclick="this.parentElement.style.display='none'" style="margin-top: 12px; padding: 8px 16px; background: #2196f3; color: white; border: none; border-radius: 6px; cursor: pointer;">Закрыть отчет</button>
+    </div>
+  `;
+  
+  // Вставляем отчет в начало страницы
+  const container = document.querySelector('body > h1').parentElement;
+  const reportDiv = document.createElement('div');
+  reportDiv.id = 'morningReport';
+  reportDiv.innerHTML = reportHTML;
+  container.insertBefore(reportDiv, container.firstChild.nextSibling);
+}
+
 // Обновить статистику за день
 function updateDailyStats() {
   const weight = +document.getElementById('weight').value;
@@ -322,3 +422,4 @@ document.getElementById('showHistoryBtn').addEventListener('click', () => {
 
 // Инициализация при загрузке
 updateDailyStats();
+showMorningReport();

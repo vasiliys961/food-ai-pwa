@@ -38,8 +38,6 @@ document.getElementById('analyzeBtn').onclick = async function () {
   try {
     const apiUrl = window.location.origin + '/api/analyze-food';
     
-    
-        console.log('Sending imageBase64:', imageBase64 ? imageBase64.substring(0, 100) + '...' : 'NULL');
     const res = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

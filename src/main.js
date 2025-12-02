@@ -17,7 +17,8 @@ document.getElementById('fileInput').addEventListener('change', function (e) {
 });
 
 document.getElementById('analyzeBtn').onclick = async function () {
-  if (!imageBase64) {    resultDiv.textContent = 'Фото не выбрано!';
+  if (!imageBase64) {
+    resultDiv.textContent = 'Фото не выбрано!';
     return;
   }
 
@@ -82,5 +83,4 @@ document.getElementById('analyzeBtn').onclick = async function () {
     console.error('Fetch error:', e);
   }
 };
-
 

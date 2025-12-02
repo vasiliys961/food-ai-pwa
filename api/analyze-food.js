@@ -1,5 +1,5 @@
-// api/analyze-food.js — CommonJS версия для Vercel + OpenRouter (Claude Sonnet)
-const axios = require('axios');
+// api/analyze-food.js — ES модуль для Vercel + OpenRouter (Claude Sonnet)
+import axios from 'axios';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'anthropic/claude-3.5-sonnet';
@@ -29,7 +29,7 @@ async function searchOpenFoodFacts(query) {
   return null;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Устанавливаем таймаут для ответа
   const timeout = setTimeout(() => {
     if (!res.headersSent) {
@@ -167,21 +167,21 @@ module.exports = async function handler(req, res) {
           role: 'system',
           content: systemPrompt
         },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image_url',
-                image_url: {
-                  url: imageUrl
-                }
-              },
-              {
-                type: 'text',
-                text: userPrompt
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl
               }
-            ]
-          }
+            },
+            {
+              type: 'text',
+              text: userPrompt
+            }
+          ]
+        }
       ]
     };
     
@@ -255,7 +255,6 @@ module.exports = async function handler(req, res) {
       };
     } else {
       // Если нет данных в OpenFoodFacts, используем приблизительные значения на основе типа блюда
-      // Это можно улучшить, добавив базу данных блюд
       const dishLower = data.dish.toLowerCase();
       let baseCalories = 150; // среднее значение
       
@@ -314,4 +313,4 @@ module.exports = async function handler(req, res) {
       });
     }
   }
-};
+}

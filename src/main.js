@@ -250,7 +250,9 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
       </p>`;
     }
 
-    const refInfo = REFERENCE_SIZES[reference];
+    const refInfo = REFERENCE_SIZES[reference] || REFERENCE_SIZES.card;
+    const refInfoText = refInfo ? `📏 Референс: ${refInfo.name} (${refInfo.size})` : '';
+    
     document.getElementById('result').innerHTML = `
       <h2>✅ Результат анализа</h2>
       <div style="background: #e8f5e9; padding: 16px; border-radius: 8px; margin: 12px 0;">
@@ -258,11 +260,11 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         <p><strong>Вес:</strong> ${result.weight_g} г</p>
         <p><strong>Калории:</strong> ${result.calories} ккал</p>
         ${percentFromDaily}
-        <p><strong>Белки:</strong> ${result.nutrients.белки} г</p>
-        <p><strong>Жиры:</strong> ${result.nutrients.жиры} г</p>
-        <p><strong>Углеводы:</strong> ${result.nutrients.углеводы} г</p>
+        <p><strong>Белки:</strong> ${result.nutrients?.белки || 0} г</p>
+        <p><strong>Жиры:</strong> ${result.nutrients?.жиры || 0} г</p>
+        <p><strong>Углеводы:</strong> ${result.nutrients?.углеводы || 0} г</p>
         ${result.ingredients?.length ? `<p><strong>Ингредиенты:</strong> ${result.ingredients.join(', ')}</p>` : ''}
-        <p style="font-size: 12px; color: #666; margin-top: 8px;">📏 Референс: ${refInfo.name} (${refInfo.size})</p>
+        ${refInfoText ? `<p style="font-size: 12px; color: #666; margin-top: 8px;">${refInfoText}</p>` : ''}
       </div>
       <p style="font-size: 14px; color: #666;">ℹ️ Данные сохранены в историю. Точность — ориентировочная.</p>
     `;

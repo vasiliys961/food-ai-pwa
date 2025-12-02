@@ -19,7 +19,8 @@ document.getElementById('fileInput').addEventListener('change', function (e) {
 });
 
 document.getElementById('analyzeBtn').onclick = async function () {
-  if (!fileLoaded || !imageBase64) {    resultDiv.textContent = 'Фото не выбрано!';
+  if (!fileLoaded || !imageBase64) {
+    resultDiv.textContent = 'Фото не выбрано!';
     return;
   }
 

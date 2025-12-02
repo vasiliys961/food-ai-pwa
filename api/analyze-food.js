@@ -76,12 +76,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Не передано изображение' });
     }
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    let apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       clearTimeout(timeout);
       console.error('OPENROUTER_API_KEY не установлен');
       return res.status(500).json({ error: 'OPENROUTER_API_KEY не задан на сервере' });
     }
+    
+    // Очищаем API ключ от невидимых символов (переносы строк, пробелы и т.д.)
+    apiKey = apiKey.trim().replace(/\s+/g, '');
+    console.log('API key length after cleanup:', apiKey.length);
+    console.log('API key starts with:', apiKey.substring(0, 10), '...');
 
     console.log('API key found, image length:', imageBase64?.length || 0);
     console.log('Image starts with:', imageBase64?.substring(0, 50) || 'empty');
@@ -196,12 +201,17 @@ export default async function handler(req, res) {
     
     console.log('Request payload prepared, image_url length:', imageUrl.length);
     
+    // Формируем заголовки, убеждаясь что нет недопустимых символов
+    const authHeader = `Bearer ${apiKey}`;
+    console.log('Auth header length:', authHeader.length);
+    console.log('Auth header valid:', /^[\x20-\x7E]+$/.test(authHeader)); // Проверка на ASCII printable
+    
     const openRouterRes = await axios.post(
       OPENROUTER_API_URL,
       requestPayload,
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': authHeader,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'https://food-ai-pwa.vercel.app',
           'X-Title': 'Food AI PWA'

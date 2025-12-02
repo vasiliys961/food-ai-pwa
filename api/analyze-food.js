@@ -93,8 +93,7 @@ export default async function handler(req, res) {
     }
 
     const apiData = await response.json();
-    const rawText = apiData.content?.[0]?.text || '{}';
-
+const rawText = apiData.choices?.[0]?.message?.content || '{}';
     let data;
     try {
       data = JSON.parse(rawText);

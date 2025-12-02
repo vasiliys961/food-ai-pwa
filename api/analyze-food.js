@@ -53,15 +53,14 @@ export default async function handler(req, res) {
 
     const base64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetchhh'https://openrouter.ai/api/v1/chat/completions'
       method: 'POST',
       headers: {
-        'x-api-key': claudeKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${claudeKey}`,
         'content-type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-5-sonnet',
+        model: 'anthropic/claude-sonnet-4.5'
         max_tokens: 1200,
         messages: [
           {

@@ -79,17 +79,30 @@ function updateDailyStats() {
   // Определяем цель для отображения
   const goalText = goal === 'снижение' ? 'Снижение веса' : goal === 'набор' ? 'Набор массы' : 'Поддержание веса';
 
-  document.getElementById('dailyLimit').textContent = dailyLimit;
-  document.getElementById('dailyCalories').innerHTML = `
-    <strong>Калории:</strong> ${todayCalories} / ${dailyLimit} ккал 
-    <span style="color: ${percent > 100 ? '#f44336' : percent > 80 ? '#ff9800' : '#4caf50'}; font-weight: bold;">
-      (${percent}%)
-    </span>
-    <br><small style="color: #666;">Цель: ${goalText} | ${sex === 'муж' ? 'Мужчина' : 'Женщина'}, ${weight} кг, ${height} см, ${activity === 'активный' ? 'Активный' : 'Малоподвижный'}</small>
-  `;
-  document.getElementById('caloriesProgress').style.width = `${Math.min(100, percent)}%`;
-  document.getElementById('caloriesProgress').style.backgroundColor = percent > 100 ? '#f44336' : percent > 80 ? '#ff9800' : '#4caf50';
-  document.getElementById('caloriesProgress').textContent = `${percent}%`;
+  // Обновляем элементы, проверяя их существование
+  const dailyLimitEl = document.getElementById('dailyLimit');
+  const dailyCaloriesEl = document.getElementById('dailyCalories');
+  const caloriesProgressEl = document.getElementById('caloriesProgress');
+  
+  if (dailyLimitEl) {
+    dailyLimitEl.textContent = dailyLimit;
+  }
+  
+  if (dailyCaloriesEl) {
+    dailyCaloriesEl.innerHTML = `
+      <strong>Калории:</strong> ${todayCalories} / <span id="dailyLimit">${dailyLimit}</span> ккал 
+      <span style="color: ${percent > 100 ? '#f44336' : percent > 80 ? '#ff9800' : '#4caf50'}; font-weight: bold;">
+        (${percent}%)
+      </span>
+      <br><small style="color: #666;">Цель: ${goalText} | ${sex === 'муж' ? 'Мужчина' : 'Женщина'}, ${weight} кг, ${height} см, ${activity === 'активный' ? 'Активный' : 'Малоподвижный'}</small>
+    `;
+  }
+  
+  if (caloriesProgressEl) {
+    caloriesProgressEl.style.width = `${Math.min(100, percent)}%`;
+    caloriesProgressEl.style.backgroundColor = percent > 100 ? '#f44336' : percent > 80 ? '#ff9800' : '#4caf50';
+    caloriesProgressEl.textContent = `${percent}%`;
+  }
 
   // Советы по питанию
   const remaining = dailyLimit - todayCalories;

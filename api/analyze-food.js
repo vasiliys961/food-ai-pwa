@@ -120,6 +120,17 @@ const rawText = apiData.choices?.[0]?.message?.content || '{}';
       });
     }
 
+ // Calculate TDEE (Total Daily Energy Expenditure) and daily recommendation
+ const { weight, height, sex, activity, goal } = userParams;
+ const activityMultiplier = { 'Малоподвижный': 1.2, 'Активный': 1.55, 'Очень активный': 1.9 }[activity] || 1.5;
+ const sexCoeff = sex === 'Женский' ? -161 : 5;
+ const tdee = Math.round((10 * weight + 6.25 * height - 5 * 30 + sexCoeff) * activityMultiplier);
+ const goalAdjustment = { 'Снижение веса': -500, 'Поддержание': 0, 'Набор массы': 500 }[goal] || 0;
+ const dailyNorm = tdee + goalAdjustment;
+ const recommendation = data.calories <= dailyNorm ? '✅ В норме' : '⚠️ Много';
+ data.dailyNorm = dailyNorm;
+ data.recommendation = recommendation;
+
     return res.status(200).json({ 
       ...data, 
       userParams, 
